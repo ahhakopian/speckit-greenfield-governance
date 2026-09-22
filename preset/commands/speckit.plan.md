@@ -15,3 +15,27 @@ If correct delivery needs a material baseline change, record
 Controlled Architecture Change lifecycle completes. If the conflict changes
 product authority, scope, ownership, or a product boundary, stop and route it
 to the Canonical PRD; do not conceal it as an architecture change.
+
+After the existing pre-plan governance and before technical planning, ask:
+**Does this Feature require a new UX decision?** Determine first whether the
+Feature materially changes a user-facing surface or interaction; merely
+touching frontend code is not sufficient.
+
+1. If there is no material UI change, continue ordinary SpecKit planning.
+2. If an established UX/UI pattern fully determines the change, identify and
+   reuse it, then continue without shaping.
+3. Otherwise invoke: **Use the installed Impeccable shape capability, bounded
+   to the current Feature and affected surfaces.** If the named capability is
+   unavailable or cannot run, stop planning and report the missing capability;
+   do not perform availability detection or substitute generic UX reasoning.
+4. Classify each shaping outcome by authority. Route product meaning or scope
+   to its owning product authority. If shaping introduces or changes
+   user-observable Feature behavior, stop technical planning until `spec.md` is
+   reconciled and revalidated. Do not copy a purely presentational decision
+   into `spec.md`.
+
+Shaping may complete without an artifact. Create or update `DESIGN.md` only for
+a concrete reusable UX/UI rule. A surface artifact is optional and limited to a
+durable surface-local presentation decision with no better authority. Continue
+with ordinary SpecKit planning only after these conditions are satisfied;
+Impeccable shaping does not replace SpecKit planning, tasks, or implementation.

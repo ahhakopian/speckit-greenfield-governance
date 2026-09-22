@@ -73,6 +73,19 @@ When authoritative artifacts conflict, work MUST stop at the earliest phase
 affected. The conflict MUST be resolved in the artifact that owns the disputed
 subject before downstream work continues.
 
+For UX/UI governance, authority is likewise determined by subject:
+
+- product artifacts own product meaning and scope;
+- `spec.md` owns user-observable Feature behavior;
+- `DESIGN.md`, when present, owns reusable cross-Feature or surface UX/UI
+  rules;
+- an optional surface artifact owns only durable, surface-specific presentation
+  decisions that have no better authority; and
+- `plan.md` owns technical realization.
+
+UX/UI craft, evidence, or a tool result MUST NOT silently change an authority
+owned by any of these artifacts.
+
 ## 3. PRD Governance Gate
 
 The Canonical PRD MUST initially be treated as untrusted input even though it is
@@ -499,7 +512,83 @@ reconsidered.
 The ROADMAP entry status becomes `done` only after successful release. The
 overlay does not define or replace the project's release tooling.
 
-## 15. Project-Owned and Overlay-Owned Artifacts
+## 15. Conditional UX/UI Governance
+
+UX/UI governance applies only when a Feature materially changes a user-facing
+surface or interaction. Merely touching frontend code is not sufficient. It
+does not change the ownership of SpecKit, the existing Feature Governance, or
+the existing MVP Governance: SpecKit remains lifecycle owner; Feature
+Governance remains authoritative for Feature boundaries and evolution; and MVP
+Governance remains authoritative for simplicity and complexity control.
+
+### Pre-plan UX/UI decision
+
+Before technical planning, ask: **Does this Feature require a new UX
+decision?** First determine whether the Feature materially changes a
+user-facing surface or interaction.
+
+- If it does not, continue ordinary SpecKit planning.
+- If an established UX/UI pattern fully determines the change, identify and
+  reuse that pattern, then continue without shaping.
+- Otherwise, invoke the installed Impeccable shape capability, bounded to the
+  current Feature and affected surfaces.
+- If that capability is unavailable or cannot run, stop the affected planning
+  phase and report the missing capability. Do not perform custom availability
+  detection or substitute generic UX reasoning.
+
+Availability is implicit in the named capability invocation; this overlay MUST
+NOT add availability detection.
+
+Classify the shaping outcome by authority. A shaping outcome that changes
+product meaning or scope MUST be routed to its owning product authority. If it
+introduces or changes user-observable Feature behavior, technical planning MUST
+stop until `spec.md` is reconciled and revalidated. Purely presentational
+decisions MUST NOT be copied into `spec.md`. Impeccable craft or shaping MUST
+NOT replace SpecKit planning, task generation, or implementation.
+
+### UX/UI artifact YAGNI
+
+Shaping MAY complete without creating an artifact. `DESIGN.md` is not required
+merely because UI exists; create or update it only when a concrete reusable
+UX/UI rule emerges. A `.impeccable/surfaces/*` artifact is not required for
+every UI Feature and is permitted only for a durable, surface-local
+presentation decision that must survive and has no better authority. A UX
+review report is not required. Native Impeccable review snapshots are
+tool-owned evidence, not governance authority.
+
+### Post-implementation UX/UI convergence
+
+During convergence, determine from both Feature intent and the actual
+implementation whether user-facing UI was materially changed. For material UI,
+current rendered evidence in the target runtime is required for the affected
+flow or states and representative viewport or device classes as appropriate.
+For browser-based surfaces, rendered browser evidence satisfies this
+requirement. Evaluate only against applicable authority: reconciled `spec.md`,
+relevant upstream product constraints, applicable `DESIGN.md`, and applicable
+surface-specific decisions. This focused check MUST NOT become a full product
+re-audit.
+
+Select specialist review in proportion to actual risk:
+
+- When UX or interaction quality is materially at risk, invoke the installed
+  Impeccable critique capability for the affected Feature and surfaces.
+- When accessibility, responsiveness, theming, performance, or implementation
+  integrity is materially at risk, invoke the installed Impeccable audit
+  capability for the affected Feature and surfaces.
+- Invoke both only when the change spans both categories or is a substantial
+  new or redesigned surface.
+
+If a required named capability is unavailable or cannot run, stop the affected
+convergence phase and report the missing capability; do not substitute generic
+UX reasoning or add custom availability detection. Material findings MUST be
+resolved before convergence. After a material fix, reverify the affected
+behavior. Polish is optional and finding-driven. UX/UI conditions MUST pass
+before the existing final `COMPATIBLE` classification is returned.
+
+UX/UI governance introduces no extension, lifecycle hook, workflow, SpecKit
+command, governance aggregator, or mandatory artifact type.
+
+## 16. Project-Owned and Overlay-Owned Artifacts
 
 The following are project-owned and MUST survive add-on removal:
 
@@ -508,11 +597,16 @@ The following are project-owned and MUST survive add-on removal:
 - `ROADMAP.md`;
 - `.specify/memory/constitution.md`;
 - `specs/**` and their normal Feature-local contents;
+- `DESIGN.md`, when present;
+- durable `.impeccable/surfaces/*` artifacts, when present; and
 - any project-owned ADR that was independently justified under this policy.
 
 Project-owned artifacts MUST NOT be treated as files owned by the add-on's
 distribution lifecycle. Add-on removal MUST NOT delete, roll back, or replace
 their approved content.
+
+Native Impeccable critique or review snapshots remain tool-owned evidence and
+MUST NOT be treated as project-owned governance authority.
 
 Overlay-owned content is limited to the semantic policy and, in later authorized
 phases, the approved minimum Workflow, Preset, existing Feature Governance
@@ -520,9 +614,12 @@ extension changes, and Bundle metadata needed to deliver this policy. Generated
 project decisions and Feature artifacts are not overlay-owned merely because
 overlay behavior helped create or update them.
 
-## 16. Explicit Non-Goals and Prohibited Complexity
+## 17. Explicit Non-Goals and Prohibited Complexity
 
-Version 0.1 MUST NOT add or require:
+The externally installed Impeccable shape, critique, and audit capabilities are
+runtime prerequisites when applicable. They are not overlay-owned components.
+
+This overlay MUST NOT add or require:
 
 - a full Feature lifecycle inside `greenfield-bootstrap`;
 - `full`, `foundation`, or `feature` bootstrap modes;
@@ -544,6 +641,9 @@ Version 0.1 MUST NOT add or require:
   package lifecycle, or uninstall lifecycle;
 - a native workflow overlay in place of the standalone foundation Workflow;
 - new workflow step types, shell-based governance, or parallel orchestration;
+- a new or custom overlay-owned UX/UI skill, extension, lifecycle hook,
+  workflow, SpecKit command, governance aggregator, mandatory artifact type,
+  wrapper, registry, or installer;
 - modifications to SpecKit Core;
 - automatic approval, automatic product-policy selection, or silent mutation of
   an authoritative source.
