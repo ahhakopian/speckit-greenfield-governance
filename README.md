@@ -49,6 +49,42 @@ durable surface-local presentation decisions without a better authority, and no
 UX review report is required. This overlay adds no UX/UI extension, hook,
 workflow, command, aggregator, or mandatory artifact type.
 
+## Installation from GitHub
+
+This installs the published source tags into a clean SpecKit 0.16.2 project
+without archives, GitHub Releases, or catalogs. It uses native local/dev
+component installation and then registers the local Bundle against the four
+already-installed component IDs.
+
+```bash
+specify --version # expected: specify 0.16.2
+
+mkdir -p ~/src/speckit-governance
+cd ~/src/speckit-governance
+git clone --branch v1.0.1 --depth 1 https://github.com/ahhakopian/speckit-feature-governance.git
+git clone --branch v0.2.0 --depth 1 https://github.com/ahhakopian/speckit-greenfield-governance.git
+
+mkdir -p ~/projects/greenfield-project
+cd ~/projects/greenfield-project
+specify init --here --integration codex --ignore-agent-tools
+
+specify extension add --dev ~/src/speckit-governance/speckit-feature-governance/extension --priority 10
+specify preset add --dev ~/src/speckit-governance/speckit-feature-governance/preset --priority 10
+specify workflow add --dev ~/src/speckit-governance/speckit-greenfield-governance/workflow/workflow.yml
+specify preset add --dev ~/src/speckit-governance/speckit-greenfield-governance/preset --priority 20
+
+specify bundle install ~/src/speckit-governance/speckit-greenfield-governance --offline
+
+specify preset list
+specify extension list
+specify workflow list
+specify bundle list
+```
+
+`specify bundle install` records `speckit-greenfield-governance@0.2.0`; because
+the four components are installed first, it resolves them locally and adds no
+catalog dependency.
+
 ## Component resolution and publication
 
 SpecKit 0.16.2 resolves Bundle component IDs through native primitive catalogs
