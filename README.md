@@ -4,7 +4,8 @@ This add-on distributes the policy in
 [`docs/greenfield-governance-policy.md`](docs/greenfield-governance-policy.md)
 through native SpecKit components.
 
-- `workflow/workflow.yml` is the standalone `greenfield-bootstrap` Workflow.
+- `workflow/` is the standalone `greenfield-bootstrap` Workflow package,
+  including its run-local PRD governance validator.
 - `preset/` is the thin `greenfield-governance` Preset for `specify`,
   `clarify`, `plan`, and `converge`.
 - `bundle.yml` composes that Workflow and Preset with the existing
@@ -19,14 +20,16 @@ distributed or owned by this Bundle.
 
 ## PRD convergence in bootstrap
 
-`greenfield-bootstrap` pauses for a human decision when a full PRD review finds
-a material `PRODUCT GAP`. Resume the same run with a self-contained
-`prd_decision` and optional `prd_comment`; bootstrap applies the decision as a
-targeted edit to the same Canonical PRD, then reviews the entire PRD again.
-Repeat for further gaps. A comment alone creates no requirement. Because inputs
-persist, clear old values with `prd_decision=` and `prd_comment=` on resumes
-without a fresh answer. Architecture begins only after a clean review and
-explicit approval of the PRD gate.
+`greenfield-bootstrap` records each full PRD review as structured run-local
+state bound to the SHA-256 of the current Canonical PRD. A material `PRODUCT
+GAP` stays unresolved through repeated reviews of unchanged content. Resume
+the same run with a self-contained `prd_decision` and optional `prd_comment`;
+bootstrap applies that decision to the Canonical PRD and reviews the new
+revision. The validator suppresses replayed decisions and requires a real PRD
+change plus a clean review to resolve the selected gap. Architecture begins
+only when the latest review is clean, no gap remains unresolved, and explicit
+approval is bound to that exact revision. Run-local JSON retains review,
+resolution, and approval evidence; the human gate shows only the decision.
 
 ## Conditional UX/UI lifecycle
 
@@ -62,6 +65,7 @@ workflow, command, aggregator, or mandatory artifact type.
 
 ## Installation from GitHub
 
+The commands below apply after the proposed `v0.4.0` source tag is published.
 This installs the published source tags into a clean SpecKit 0.16.2 project
 without archives, GitHub Releases, or catalogs. It uses native local/dev
 component installation and then registers the local Bundle against the four
@@ -73,7 +77,7 @@ specify --version # expected: specify 0.16.2
 mkdir -p ~/src/speckit-governance
 cd ~/src/speckit-governance
 git clone --branch v1.0.1 --depth 1 https://github.com/ahhakopian/speckit-feature-governance.git
-git clone --branch v0.3.0 --depth 1 https://github.com/ahhakopian/speckit-greenfield-governance.git
+git clone --branch v0.4.0 --depth 1 https://github.com/ahhakopian/speckit-greenfield-governance.git
 
 mkdir -p ~/projects/greenfield-project
 cd ~/projects/greenfield-project
@@ -81,7 +85,7 @@ specify init --here --integration codex --ignore-agent-tools
 
 specify extension add --dev ~/src/speckit-governance/speckit-feature-governance/extension --priority 10
 specify preset add --dev ~/src/speckit-governance/speckit-feature-governance/preset --priority 10
-specify workflow add --dev ~/src/speckit-governance/speckit-greenfield-governance/workflow/workflow.yml
+specify workflow add --dev ~/src/speckit-governance/speckit-greenfield-governance/workflow
 specify preset add --dev ~/src/speckit-governance/speckit-greenfield-governance/preset --priority 20
 
 specify bundle install ~/src/speckit-governance/speckit-greenfield-governance --offline
@@ -92,7 +96,7 @@ specify workflow list
 specify bundle list
 ```
 
-`specify bundle install` records `speckit-greenfield-governance@0.3.0`; because
+`specify bundle install` records `speckit-greenfield-governance@0.4.0`; because
 the four components are installed first, it resolves them locally and adds no
 catalog dependency.
 

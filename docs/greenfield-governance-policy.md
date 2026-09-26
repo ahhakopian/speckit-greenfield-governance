@@ -130,9 +130,20 @@ The review, human decision, and correction cycle repeats for each remaining
 material `PRODUCT GAP`. Architecture derivation MUST wait for a clean full
 review and explicit human approval.
 
-Gate findings MUST be reported in the active interaction. Native workflow state
-MAY record the gate outcome. The overlay MUST NOT create a separate PRD-review
-artifact.
+The normal human interaction MUST show only the product question or concise PRD
+approval request, the available choices, a short recommendation, and the
+expected answer. Run IDs, hashes, repository diagnostics, commands, and
+validator details belong in debug state, not the decision surface.
+
+The Workflow MUST persist machine-readable review verdicts, exact Canonical
+PRD revision identities, unresolved gap identities, and revision-bound human
+approval. A gap found on one revision remains unresolved across repeated
+reviews of that revision, even if a later review reports CLEAN. A specific gap
+may be resolved only after an explicit human product decision changes the PRD
+and a full review of the new revision no longer finds that gap. Run-local
+machine state and a transient structured review submission are permitted for
+audit and enforcement; neither is a product source of truth or a separate
+PRD-review report.
 
 ## 4. Product Gap vs Architecture Gap
 
@@ -654,14 +665,14 @@ This overlay MUST NOT add or require:
 - Preset wrappers or addenda for `tasks`, `analyze`, or `constitution`;
 - Product Model, Access Model, or Product Boundaries artifacts;
 - a traceability artifact, database, or registry;
-- a PRD-review or architecture-review report;
+- a product-facing PRD-review or architecture-review report;
 - a mandatory ADR system;
 - an architecture-change artifact;
 - a custom release artifact or release engine;
 - a custom installer, global wrapper, source cache, synchronization mechanism,
   package lifecycle, or uninstall lifecycle;
 - a native workflow overlay in place of the standalone foundation Workflow;
-- new workflow step types, shell-based governance, or parallel orchestration;
+- new workflow step types or parallel orchestration;
 - a new or custom overlay-owned UX/UI skill, extension, lifecycle hook,
   workflow, SpecKit command, governance aggregator, mandatory artifact type,
   wrapper, registry, or installer;

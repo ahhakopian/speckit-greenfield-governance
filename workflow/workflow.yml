@@ -3,7 +3,7 @@ schema_version: "1.0"
 workflow:
   id: "greenfield-bootstrap"
   name: "Greenfield Bootstrap"
-  version: "0.2.0"
+  version: "0.3.0"
   author: "Local Governance"
   description: "Govern a Canonical PRD and establish the approved project foundation."
 
@@ -44,13 +44,18 @@ steps:
     condition: false
     max_iterations: 1
     steps:
+      - id: prepare-prd-review
+        type: shell
+        run: python3 "$SPECKIT_WORKFLOW_DIR/governance.py" prepare "{{ context.run_id }}"
+        output_format: json
+
       - id: apply-prd-resolution
         type: prompt
         integration: "{{ inputs.integration }}"
         prompt: |
           Read the Canonical PRD at `{{ inputs.canonical_prd }}`.
-          Human product decision: `{{ inputs.prd_decision }}`.
-          Supporting comment/rationale: `{{ inputs.prd_comment }}`.
+          Human product decision: `{{ steps.prepare-prd-review.output.data.decision }}`.
+          Supporting comment/rationale: `{{ steps.prepare-prd-review.output.data.comment }}`.
 
           If the decision is blank, make no change. A comment alone creates no
           product requirement. Otherwise treat the decision as human-owned and
@@ -68,6 +73,11 @@ steps:
           matched to the PRD, make no edit and clearly report why. Report what
           happened in the active response; the following step will fully review
           the current PRD regardless of whether an edit was made.
+
+      - id: start-prd-review
+        type: shell
+        run: python3 "$SPECKIT_WORKFLOW_DIR/governance.py" start_review "{{ context.run_id }}"
+        output_format: json
 
       - id: govern-prd
         type: prompt
@@ -98,34 +108,54 @@ steps:
           uncertainty, block only if the product decision itself remains open.
           Do not make technical or product choices here.
 
-          If any material PRODUCT GAP remains, prominently label the response
-          PRODUCT GAP and present exactly ONE actionable product question at a
-          time. Identify the relevant product context, explain why existing PRD
-          text does not decide it, give useful materially distinct options where
-          possible, and invite a custom human alternative. Do not select an
-          answer. The human must read this active response before the gate.
-          If none remains, explicitly report CLEAN for this governance stage,
-          state that no material PRODUCT GAP remains, and recommend approval.
-          Do not create or modify any file or create a PRD review or
-          traceability artifact.
+          Submit the authoritative machine-readable review to
+          `.specify/workflows/runs/{{ context.run_id }}/prd-review-submission.json`.
+          Write a JSON object with `verdict` (CLEAN or PRODUCT_GAP) and `gaps`
+          (an array). For CLEAN, gaps must be empty. For PRODUCT_GAP, include
+          each material gap found with a stable lowercase slug `gap_id`, one
+          actionable `question`, an `options` array of at least two materially
+          distinct answers, a 1-based `recommended_option`, and a short
+          `rationale`. Rediscovered issues must reuse their prior gap_id.
+          Existing unresolved gaps and their IDs are in
+          `.specify/workflows/runs/{{ context.run_id }}/prd-governance.json`;
+          assess them against the current PRD. Never claim an unchanged PRD
+          resolved a previously recorded gap. The workflow validator binds
+          this submission to the independently hashed PRD revision and keeps
+          unresolved gaps sticky. Do not modify the PRD in this step.
 
-      - id: prd-governance-gate
-        type: gate
-        message: >-
-          Read the immediately preceding govern-prd response. If it reports
-          CLEAN with no material PRODUCT GAP, approve to permit architecture
-          derivation. If it reports a PRODUCT GAP, reject; the run pauses rather
-          than aborts. Resume with --input 'prd_decision=<self-contained
-          selected or custom answer identifying the question>' and optionally
-          --input 'prd_comment=<context/rationale>'. Inputs persist: on any
-          later resume without a fresh product answer, explicitly supply
-          --input prd_decision= and --input prd_comment= to clear old values.
-          Approval accepts declared ARCHITECTURE GAP items for architecture
-          derivation; it never waives a PRODUCT GAP.
-        show_file: "{{ inputs.canonical_prd }}"
-        options: [approve, reject]
-        on_reject: retry
-        verdict_input: prd_gate_decision
+          The normal human response must contain no run ID, hash, repository
+          status, workflow state, resume command, or validator details. The
+          next gate displays the decision question or approval prompt. Do not
+          stream a review report or other human-facing text; the complete
+          findings belong only in the JSON submission.
+
+      - id: record-prd-review
+        type: shell
+        run: python3 "$SPECKIT_WORKFLOW_DIR/governance.py" record "{{ context.run_id }}"
+        output_format: json
+
+      - id: route-prd-review
+        type: if
+        condition: "{{ steps.record-prd-review.output.data.can_approve }}"
+        then:
+          - id: prd-governance-gate
+            type: gate
+            message: "{{ steps.record-prd-review.output.data.human_message }}"
+            options: [approve, reject]
+            on_reject: retry
+            verdict_input: prd_gate_decision
+        else:
+          - id: prd-product-decision
+            type: gate
+            message: "{{ steps.record-prd-review.output.data.human_message }}"
+            options: [reject]
+            on_reject: retry
+            verdict_input: prd_gate_decision
+
+      - id: verify-prd-approval
+        type: shell
+        run: python3 "$SPECKIT_WORKFLOW_DIR/governance.py" verify "{{ context.run_id }}"
+        output_format: json
 
   - id: derive-review-architecture
     type: prompt
