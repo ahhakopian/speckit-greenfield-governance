@@ -17,6 +17,17 @@ project-owned and are not bundle assets.
 MVP Governance remains an independently installed governance layer and is not
 distributed or owned by this Bundle.
 
+## PRD convergence in bootstrap
+
+`greenfield-bootstrap` pauses for a human decision when a full PRD review finds
+a material `PRODUCT GAP`. Resume the same run with a self-contained
+`prd_decision` and optional `prd_comment`; bootstrap applies the decision as a
+targeted edit to the same Canonical PRD, then reviews the entire PRD again.
+Repeat for further gaps. A comment alone creates no requirement. Because inputs
+persist, clear old values with `prd_decision=` and `prd_comment=` on resumes
+without a fresh answer. Architecture begins only after a clean review and
+explicit approval of the PRD gate.
+
 ## Conditional UX/UI lifecycle
 
 UX/UI governance applies only to a Feature that materially changes a
@@ -62,7 +73,7 @@ specify --version # expected: specify 0.16.2
 mkdir -p ~/src/speckit-governance
 cd ~/src/speckit-governance
 git clone --branch v1.0.1 --depth 1 https://github.com/ahhakopian/speckit-feature-governance.git
-git clone --branch v0.2.0 --depth 1 https://github.com/ahhakopian/speckit-greenfield-governance.git
+git clone --branch v0.3.0 --depth 1 https://github.com/ahhakopian/speckit-greenfield-governance.git
 
 mkdir -p ~/projects/greenfield-project
 cd ~/projects/greenfield-project
@@ -81,7 +92,7 @@ specify workflow list
 specify bundle list
 ```
 
-`specify bundle install` records `speckit-greenfield-governance@0.2.0`; because
+`specify bundle install` records `speckit-greenfield-governance@0.3.0`; because
 the four components are installed first, it resolves them locally and adds no
 catalog dependency.
 

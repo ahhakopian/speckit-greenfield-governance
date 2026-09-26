@@ -17,7 +17,8 @@ The required foundation lifecycle is:
 
 ```text
 Untrusted Canonical PRD
--> PRD Governance Gate
+-> PRD Governance Gate (human product decision, targeted Canonical PRD edit,
+   and full re-review repeat inside greenfield-bootstrap as needed)
 -> derive TARGET Architecture
 -> Architecture Review
 -> Approved architecture/baseline.md
@@ -111,13 +112,23 @@ The gate MUST NOT select APIs, services, frameworks, databases, deployment
 topology, or other architecture choices. Missing technical realization is not,
 by itself, a PRD defect.
 
-The gate passes only when no blocking `PRODUCT GAP` remains. The governed PRD
+The gate passes only after a full review of the current Canonical PRD finds no
+blocking `PRODUCT GAP` and a human explicitly approves. The governed PRD
 revision then becomes trusted as input to architecture derivation; this trust is
 limited to its product authority and does not approve any architecture.
 
 The gate MUST expose its gap classifications for explicit human acceptance.
 Human acceptance MAY allow declared `ARCHITECTURE GAP` items to proceed, but it
 MUST NOT waive a `PRODUCT GAP`; the Canonical PRD must first be corrected.
+
+A `PRODUCT GAP` MAY be resolved inside the same `greenfield-bootstrap` run. The
+human owns the product decision; bootstrap MAY apply that decision as the
+smallest sufficient targeted edit to the same Canonical PRD. It MUST NOT infer
+another product decision from a comment or rewrite unrelated product meaning.
+After every such edit, bootstrap MUST reread and review the entire current PRD.
+The review, human decision, and correction cycle repeats for each remaining
+material `PRODUCT GAP`. Architecture derivation MUST wait for a clean full
+review and explicit human approval.
 
 Gate findings MUST be reported in the active interaction. Native workflow state
 MAY record the gate outcome. The overlay MUST NOT create a separate PRD-review
@@ -141,10 +152,20 @@ changes or could materially change any of the following:
 - required outcome, lifecycle behavior, or explicit exclusion;
 - whether a capability belongs to the current product or milestone.
 
-A `PRODUCT GAP` is blocking. Architecture derivation MUST stop. The Canonical
-PRD MUST be changed through its normal human-controlled process, and the PRD
-Governance Gate MUST be run again. Architecture, ROADMAP, Constitution, and
-Feature artifacts MUST NOT resolve or conceal the gap.
+A `PRODUCT GAP` is blocking. Architecture derivation MUST stop. The human-owned
+product decision MUST be recorded in the Canonical PRD, whether through its
+normal human-controlled process or the targeted in-run correction permitted in
+Section 3, and the entire current PRD MUST be reviewed again. Architecture,
+ROADMAP, Constitution, and Feature artifacts MUST NOT resolve or conceal the
+gap.
+
+Before classifying an issue as a blocking `PRODUCT GAP`, reconcile it against
+the whole Canonical PRD, including requirements elsewhere, exclusions,
+boundaries, lifecycle semantics, and explicit downstream deferrals. A blocking
+gap requires materially different possible product-visible behavior or product
+semantics that the PRD does not decide and that require a product decision.
+Already resolved requirements, immaterial underspecification, and intentionally
+delegated architecture or design choices are not blocking `PRODUCT GAP` items.
 
 ### ARCHITECTURE GAP
 
