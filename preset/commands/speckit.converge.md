@@ -42,3 +42,9 @@ resolved. After a material fix, reverify the affected behavior. Polish is
 optional and finding-driven. Do not require a review artifact merely to prove
 that review occurred. The UX/UI conditions must pass before returning the
 existing final `COMPATIBLE` classification.
+
+Report the native outcome (`converged` or `tasks_appended`) and exactly one
+Greenfield classification (`COMPATIBLE` or `BASELINE_CHANGE_REQUIRED`). Do not
+modify ROADMAP in this command: the Greenfield-owned mandatory hook evaluates
+completion from current artifacts, its own current compatibility check, and
+fresh installed governance reviews.

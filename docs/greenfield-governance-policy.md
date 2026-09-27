@@ -34,11 +34,12 @@ The policy defines semantics, not packaging. It MUST NOT prescribe manifest
 schemas, installation machinery, agent-specific invocation syntax, or changes
 to SpecKit Core.
 
-The accepted minimum composition is one foundation-only `greenfield-bootstrap`
-Workflow, one thin Preset for `specify`, `clarify`, `plan`, and `converge`, an
-extension of the existing `speckit-feature-governance` checks, and one Bundle
-used only for distribution and composition. This composition is a constraint,
-not authorization to implement those components in the current phase.
+The accepted composition is one foundation-only `greenfield-bootstrap`
+Workflow, one thin Preset for `specify`, `clarify`, `plan`, and `converge`, the
+existing `speckit-feature-governance` checks, one Greenfield-owned ROADMAP
+lifecycle Extension, and one Bundle for distribution and composition. MVP
+Governance remains independently installed. Greenfield alone owns ROADMAP
+status transitions.
 
 ## 2. Source Authority and Sources of Truth
 
@@ -281,10 +282,38 @@ Each actionable ROADMAP entry MUST define at least:
 - status;
 - a link to the corresponding Feature specification when one exists.
 
-The minimum status vocabulary is `planned`, `ready`, `active`, `blocked`,
-`deferred`, and `done`. `ready` means that declared dependencies and required
-upstream decisions permit specification to start; `done` has the release
-meaning defined below.
+The status vocabulary is `planned`, `ready`, `active`, `blocked`, `deferred`,
+and `done`. `planned` awaits ordinary prerequisites; `ready` permits
+specification; `active` has a successfully started Feature specification;
+`blocked` has an explicit unresolved blocker; `deferred` is explicitly held;
+and `done` means governed Feature completion under Section 14. Product release
+is a separate downstream concern.
+
+For deterministic lifecycle updates, each actionable entry MUST expose one
+`<!-- roadmap-entry: ID -->` marker, and one each of `Status:`, `Status reason:`,
+`Depends on:`, and `Feature spec:` lines. `Depends on: none` denotes no normal
+dependency; otherwise it is a comma-separated list of stable entry IDs. A
+normal dependency requires its predecessor to be `done` before the dependent
+becomes `ready`. `Feature spec: none` denotes an entry not yet specified.
+`Start requires:` is optional and MUST be used only for an additional
+prerequisite explicitly required by the approved ROADMAP. The current
+evaluator supports project-relative `file:` existence conditions. Unsupported
+or ambiguous conditions block automated promotion; the evaluator MUST NOT
+invent prerequisites. `Status reason:` records why a waiting or blocked entry
+did not advance and why an advanced entry did.
+
+The approved final Greenfield Bootstrap `PROJECT READY` human gate is the
+authority for initial readiness of the published ROADMAP; no separate
+verifier-result record is required. After that approval, Greenfield MUST
+evaluate all planned entries and promote only those with satisfied
+prerequisites and no blocker. It MUST preserve `blocked` and `deferred` entries.
+Successful `specify` links exactly one ready entry to its spec and sets it
+`active`. Clean, compatible governed completion sets that active entry `done`,
+then Greenfield reassesses only its direct ROADMAP dependents. A dependency
+becoming done alone does not override
+an explicit extra start requirement or governance blocker. Routine derived
+status changes need no human approval. The evaluator MUST be idempotent,
+fail closed, report exact reasons, and preserve unrelated ROADMAP content.
 
 Feature specifications MUST identify their originating ROADMAP entry. Plain
 text links in both directions are sufficient; a separate traceability system
@@ -294,14 +323,20 @@ ROADMAP order MUST follow meaningful product, authority, contract, lifecycle,
 architecture-responsibility, and verification dependencies. Shared file impact
 alone is not a dependency.
 
-The ROADMAP MAY change directly when only Feature decomposition, boundaries,
-ordering, or status changes and the Canonical PRD and Architecture Baseline
-remain valid. The ROADMAP MUST NOT approve new product scope or a new material
-architecture decision.
+Routine ROADMAP lifecycle status transitions are owned exclusively by the
+Greenfield lifecycle evaluator. Direct or manual status changes are not part of
+ordinary Feature lifecycle execution. A later change to Feature decomposition,
+boundaries, entry scope, dependencies, ordering, or other ROADMAP structure
+requires a separate governed ROADMAP-change decision outside routine lifecycle
+transitions. That decision must remain within the governed Canonical PRD and
+approved Architecture Baseline; the ROADMAP MUST NOT approve new product scope
+or a new material architecture decision.
 
-An entry may be released only when its dependencies are satisfied and the final
-compatibility rule passes. Its status becomes `done` only after successful
-release, not merely after tasks or implementation complete.
+Ordinary lifecycle execution MUST NOT silently mutate ROADMAP structure. The
+evaluator MUST NOT alter product scope, the Architecture Baseline, Feature
+decomposition, dependencies, ordering, or Feature content. A genuinely new
+governed decision is routed to its owning authority. Release policy and tooling
+are separate from the `done` transition.
 
 ## 8. Constitution Relationship
 
@@ -351,8 +386,10 @@ ROADMAP entry
 -> existing pre-implement guard
 -> implement
 -> converge with final architecture compatibility check
--> release
+-> fresh mandatory governance checks and required verification
 -> ROADMAP status = done
+-> reassess direct dependents
+-> release when separately authorized
 ```
 
 Feature artifacts MAY elaborate requirements and make reversible implementation
@@ -523,8 +560,22 @@ No second governance guard and no additional `after_tasks` or
 2. the approved Architecture Baseline;
 3. the ROADMAP entry's architecture responsibility and dependencies.
 
-The final architecture compatibility check is part of governed convergence; it
-MUST NOT require an `after_converge` hook or a separate review artifact.
+The final architecture compatibility check is part of governed convergence.
+Native `converge` may write only to `tasks.md`, so the Greenfield-owned
+mandatory `after_converge` hook applies the ROADMAP completion transition
+after the command reports a clean outcome. The hook MUST rerun the installed
+Feature Governance post-tasks and pre-implement checks and the installed MVP
+Governance pre-implement and post-implement checks against current artifacts.
+Each must freshly PASS. No typed receipt protocol or cross-package evidence
+store is required.
+
+Completion also requires every required task to be complete, no actionable
+convergence finding, final `COMPATIBLE` classification, required tests and
+runtime evidence, fulfilled ROADMAP responsibility and dependencies, and no
+unresolved product, architecture, Feature Governance, MVP, or Greenfield
+blocker. Missing or ambiguous evidence leaves the entry active with an exact
+reason. The hook MUST NOT use a clean convergence message alone as proof of
+completion.
 
 Release is permitted only when:
 
@@ -541,8 +592,9 @@ Release is permitted only when:
 controlled lifecycle and the Feature MUST reconverge before release is
 reconsidered.
 
-The ROADMAP entry status becomes `done` only after successful release. The
-overlay does not define or replace the project's release tooling.
+The ROADMAP entry becomes `done` after these governed completion conditions
+pass. Product release may follow under the project's independent release
+process. The overlay does not define or replace release tooling.
 
 ## 15. Conditional UX/UI Governance
 
@@ -661,7 +713,8 @@ This overlay MUST NOT add or require:
 - a second governance guard;
 - new `after_tasks` or `before_implement` hooks in addition to the existing
   Feature Governance Guard hooks;
-- an `after_converge` hook;
+- an `after_converge` hook other than the single Greenfield-owned ROADMAP
+  lifecycle hook;
 - Preset wrappers or addenda for `tasks`, `analyze`, or `constitution`;
 - Product Model, Access Model, or Product Boundaries artifacts;
 - a traceability artifact, database, or registry;
@@ -675,7 +728,8 @@ This overlay MUST NOT add or require:
 - new workflow step types or parallel orchestration;
 - a new or custom overlay-owned UX/UI skill, extension, lifecycle hook,
   workflow, SpecKit command, governance aggregator, mandatory artifact type,
-  wrapper, registry, or installer;
+  wrapper, registry, or installer; the Greenfield ROADMAP lifecycle extension
+  is a separate, narrowly scoped exception;
 - modifications to SpecKit Core;
 - automatic approval, automatic product-policy selection, or silent mutation of
   an authoritative source.

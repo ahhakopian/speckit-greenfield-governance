@@ -18,3 +18,12 @@ than resolving it in the Feature:
 
 Only Feature-local detail that is consistent with all upstream authorities may
 be added to `spec.md`.
+
+Use the exact line `ROADMAP entry: <ID>` in `spec.md`. After the core command
+has successfully written and validated the specification, invoke
+`python3 .specify/extensions/greenfield-roadmap-lifecycle/scripts/roadmap_lifecycle.py
+start <ID> <project-relative-path-to-spec.md>`. The evaluator verifies the
+entry is uniquely ready, the spec names that ID exactly once, its quality
+checklist has no open item, and its prerequisites still hold. Report the
+result. A failed or ambiguous specification must not change ROADMAP. No
+additional lifecycle hook is needed for `specify`.

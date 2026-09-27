@@ -3,7 +3,7 @@ schema_version: "1.0"
 workflow:
   id: "greenfield-bootstrap"
   name: "Greenfield Bootstrap"
-  version: "0.3.0"
+  version: "0.4.0"
   author: "Local Governance"
   description: "Govern a Canonical PRD and establish the approved project foundation."
 
@@ -232,6 +232,18 @@ steps:
       to its Feature specification when one exists. Do not create Feature specs
       merely to add a link.
 
+      Give each actionable entry a unique `<!-- roadmap-entry: ID -->` marker
+      and exactly one each of these lines: `Status:`, `Status reason:`,
+      `Depends on:`, and `Feature spec:`. Use `Depends on: none` for an entry
+      without normal dependencies and comma-separated stable IDs otherwise.
+      Use `Feature spec: none` until successful specification. Initialize
+      ordinary entries as `planned` with a specific reason, and preserve
+      genuinely `blocked` or explicitly `deferred` entries with their reasons.
+      Do not mark an entry `ready` until the approved PROJECT READY gate.
+      Add `Start requires: file:<project-relative-path>` only where the
+      approved ROADMAP explicitly requires an additional file-based start
+      condition; never invent one from a dependency alone.
+
       ROADMAP dependencies must reflect product, authority, contract, lifecycle,
       architecture-responsibility, or verification needs rather than shared-file
       impact. Do not let ROADMAP approve new product scope or architecture.
@@ -271,13 +283,22 @@ steps:
       Otherwise report `BLOCKED`, identify each blocking issue and its owning
       source, and instruct the operator to reject the final gate. Do not modify
       or create any file.
+      Begin the response with exactly `PROJECT READY` on its own line when
+      verification passes, or `BLOCKED` on its own line otherwise. The final
+      gate must be rejected when this step reports BLOCKED.
 
   - id: project-ready
     type: gate
     message: >-
-      Confirm PROJECT READY only if the preceding verification reported PROJECT
+      Approve PROJECT READY only if the preceding verification reported PROJECT
       READY with no unresolved product, architecture, ROADMAP, or Constitution
-      conflict. Reject to stop foundation completion.
+      conflict. This approval authorizes initial readiness for the published
+      ROADMAP. Reject to stop foundation completion.
     options: [approve, reject]
     on_reject: abort
     verdict_input: project_ready_decision
+
+  - id: initialize-roadmap-readiness
+    type: shell
+    run: python3 .specify/extensions/greenfield-roadmap-lifecycle/scripts/roadmap_lifecycle.py initial "{{ context.run_id }}"
+    output_format: json

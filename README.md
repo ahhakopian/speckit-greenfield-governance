@@ -4,11 +4,14 @@ This add-on distributes the policy in
 [`docs/greenfield-governance-policy.md`](docs/greenfield-governance-policy.md)
 through native SpecKit components.
 
-- `workflow/` is the standalone `greenfield-bootstrap` Workflow package,
-  including its run-local PRD governance validator.
+- `workflow/` is the `greenfield-bootstrap` Workflow package, including its
+  run-local PRD governance validator. Initial ROADMAP readiness requires the
+  Greenfield lifecycle Extension installed by the Bundle.
 - `preset/` is the thin `greenfield-governance` Preset for `specify`,
   `clarify`, `plan`, and `converge`.
-- `bundle.yml` composes that Workflow and Preset with the existing
+- `extension/` owns the ROADMAP status evaluator and one mandatory
+  `after_converge` hook.
+- `bundle.yml` composes those components with the existing
   `feature-governance` Preset and `feature-governance-guard` Extension.
 
 The Bundle owns only installable components. Canonical PRD,
@@ -17,6 +20,44 @@ project-owned and are not bundle assets.
 
 MVP Governance remains an independently installed governance layer and is not
 distributed or owned by this Bundle.
+
+## ROADMAP lifecycle
+
+Greenfield Governance applies `planned → ready` after the final Greenfield
+Bootstrap PROJECT READY gate approves the published ROADMAP,
+`ready → active` after successful `speckit.specify`, and `active → done` after
+clean, compatible `speckit.converge` plus fresh Feature Governance and MVP
+Governance checks, complete tasks, and required verification. It then
+reassesses direct dependents. `done` means governed Feature completion; product
+release is separate. MVP Governance must be installed for completion. Existing
+Feature and MVP hooks are unchanged, and routine status transitions need no
+approval.
+
+Each actionable ROADMAP entry needs the following lifecycle fields; normal
+dependencies require the predecessor to be `done`. Include `Start requires`
+only when the ROADMAP explicitly requires an extra file-based condition.
+
+```md
+<!-- roadmap-entry: RM-01 -->
+### RM-01: Establish the service contract
+Status: planned
+Status reason: awaiting PROJECT READY
+Depends on: none
+Feature spec: none
+
+<!-- roadmap-entry: RM-02 -->
+### RM-02: Use the service contract
+Status: planned
+Status reason: waiting for RM-01
+Depends on: RM-01
+Feature spec: none
+Start requires: file:contracts/service-v1.md
+```
+
+The status evaluator writes only lifecycle fields. Missing or ambiguous
+evidence leaves status unchanged and reports the blocker. The post-converge
+hook reruns the installed guards against current artifacts; it does not claim
+to retain historical guard results.
 
 ## PRD convergence in bootstrap
 
@@ -65,10 +106,10 @@ workflow, command, aggregator, or mandatory artifact type.
 
 ## Installation from GitHub
 
-The commands below apply after the proposed `v0.4.0` source tag is published.
+The commands below apply after the proposed `v0.5.0` source tag is published.
 This installs the published source tags into a clean SpecKit 0.16.2 project
 without archives, GitHub Releases, or catalogs. It uses native local/dev
-component installation and then registers the local Bundle against the four
+component installation and then registers the local Bundle against the five
 already-installed component IDs.
 
 ```bash
@@ -77,13 +118,14 @@ specify --version # expected: specify 0.16.2
 mkdir -p ~/src/speckit-governance
 cd ~/src/speckit-governance
 git clone --branch v1.0.1 --depth 1 https://github.com/ahhakopian/speckit-feature-governance.git
-git clone --branch v0.4.0 --depth 1 https://github.com/ahhakopian/speckit-greenfield-governance.git
+git clone --branch v0.5.0 --depth 1 https://github.com/ahhakopian/speckit-greenfield-governance.git
 
 mkdir -p ~/projects/greenfield-project
 cd ~/projects/greenfield-project
 specify init --here --integration codex --ignore-agent-tools
 
 specify extension add --dev ~/src/speckit-governance/speckit-feature-governance/extension --priority 10
+specify extension add --dev ~/src/speckit-governance/speckit-greenfield-governance/extension --priority 20
 specify preset add --dev ~/src/speckit-governance/speckit-feature-governance/preset --priority 10
 specify workflow add --dev ~/src/speckit-governance/speckit-greenfield-governance/workflow
 specify preset add --dev ~/src/speckit-governance/speckit-greenfield-governance/preset --priority 20
@@ -96,8 +138,8 @@ specify workflow list
 specify bundle list
 ```
 
-`specify bundle install` records `speckit-greenfield-governance@0.4.0`; because
-the four components are installed first, it resolves them locally and adds no
+`specify bundle install` records `speckit-greenfield-governance@0.5.0`; because
+the five components are installed first, it resolves them locally and adds no
 catalog dependency.
 
 ## Component resolution and publication
@@ -106,5 +148,5 @@ SpecKit 0.16.2 resolves Bundle component IDs through native primitive catalogs
 or already-installed components; `bundle.yml` deliberately does not contain
 relative paths or a custom installer. Publishing requires immutable GitHub
 release artifacts and matching native catalog entries for the Workflow,
-Greenfield Preset, Feature Governance Preset, and Feature Governance Extension,
+Greenfield Preset, Greenfield Extension, Feature Governance Preset, and Feature Governance Extension,
 then a Bundle release artifact and bundle-catalog entry.
