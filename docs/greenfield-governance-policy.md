@@ -79,10 +79,12 @@ For UX/UI governance, authority is likewise determined by subject:
 
 - product artifacts own product meaning and scope;
 - `spec.md` owns user-observable Feature behavior;
-- `DESIGN.md`, when present, owns reusable cross-Feature or surface UX/UI
+- `DESIGN.md`, when present, owns reusable project-wide, cross-Feature UX/UI
   rules;
+- `specs/<feature>/ux-design.md`, when required, owns concrete Feature-local
+  interaction design;
 - an optional surface artifact owns only durable, surface-specific presentation
-  decisions that have no better authority; and
+  details that have no better authority; and
 - `plan.md` owns technical realization.
 
 UX/UI craft, evidence, or a tool result MUST NOT silently change an authority
@@ -611,14 +613,23 @@ Before technical planning, ask: **Does this Feature require a new UX
 decision?** First determine whether the Feature materially changes a
 user-facing surface or interaction.
 
-- If it does not, continue ordinary SpecKit planning.
-- If an established UX/UI pattern fully determines the change, identify and
-  reuse that pattern, then continue without shaping.
+- If it does not, continue ordinary SpecKit planning; no UX artifact is
+  required.
+- If an established UX/UI pattern fully determines the change, record in
+  `plan.md` the exact reusable pattern, its authoritative source, and why it
+  fully determines the affected states and interactions. Then continue without
+  shaping or `ux-design.md`.
 - Otherwise, invoke the installed Impeccable shape capability, bounded to the
-  current Feature and affected surfaces.
+  current Feature and affected surfaces, and create
+  `specs/<feature>/ux-design.md` before technical planning continues.
 - If that capability is unavailable or cannot run, stop the affected planning
   phase and report the missing capability. Do not perform custom availability
   detection or substitute generic UX reasoning.
+
+A pattern exception requires an authoritative rule that covers the actual
+change. Generic wording such as "reuse the compact panel pattern" is
+insufficient when new states, commands, destructive actions, interaction
+hierarchy, or control composition remain undetermined.
 
 Availability is implicit in the named capability invocation; this overlay MUST
 NOT add availability detection.
@@ -630,15 +641,82 @@ stop until `spec.md` is reconciled and revalidated. Purely presentational
 decisions MUST NOT be copied into `spec.md`. Impeccable craft or shaping MUST
 NOT replace SpecKit planning, task generation, or implementation.
 
-### UX/UI artifact YAGNI
+### UX/UI artifact ownership
 
-Shaping MAY complete without creating an artifact. `DESIGN.md` is not required
-merely because UI exists; create or update it only when a concrete reusable
-UX/UI rule emerges. A `.impeccable/surfaces/*` artifact is not required for
-every UI Feature and is permitted only for a durable, surface-local
-presentation decision that must survive and has no better authority. A UX
-review report is not required. Native Impeccable review snapshots are
-tool-owned evidence, not governance authority.
+`specs/<feature>/ux-design.md` is REQUIRED when a Feature materially changes a
+user-facing surface or interaction and an established UX/UI pattern does not
+fully determine the resulting interaction. It MUST define enough concrete
+interaction detail that implementation is not expected to invent UX. Where
+applicable, it MUST cover:
+
+- affected surfaces and user-visible states;
+- information hierarchy;
+- primary, secondary, and destructive actions;
+- action grouping and progressive disclosure;
+- control model, such as toggle, menu, or button, without prescribing visuals
+  unless needed;
+- user-facing command semantics and labels where they materially affect
+  understanding;
+- transitions between states and error/status presentation;
+- focus, keyboard, and accessibility expectations;
+- responsive and non-obstruction constraints; and
+- acceptance-relevant rendered states.
+
+A management surface that introduces multiple new states or actions MUST NOT
+pass with only capability-level wording such as "override / disable / re-enable
+/ remove / delete". Its hierarchy, grouping, labels, disclosure, and control
+composition require concrete design unless an exact authoritative pattern
+fully determines them.
+
+`DESIGN.md` is reserved for reusable project-wide, cross-Feature UX/UI rules;
+create or update it only when shaping produces such a rule. Feature-local
+interaction decisions belong in `ux-design.md`. A `.impeccable/surfaces/*`
+artifact may retain durable surface-specific presentation details when useful,
+but does not replace required `ux-design.md`. A UX review report is not
+required. Native Impeccable review snapshots are tool-owned evidence, not
+governance authority.
+
+### Task decomposition and implementation
+
+Before generating or revising `tasks.md`, Tasks MUST determine whether the
+Feature materially changes a user-facing surface or interaction and read the
+applicable `DESIGN.md`, `spec.md`, `plan.md`, and `ux-design.md` when present. If
+the change requires a new UX decision and required `ux-design.md` is missing,
+Tasks MUST stop and route back to Plan/UX shaping. A generic pattern claim or
+capability list MUST NOT substitute for the required artifact. When Plan
+validly records an exact established pattern, authoritative source, and
+coverage justification, Tasks MUST use that authority without requiring a
+redundant `ux-design.md`.
+
+Tasks MUST derive implementation tasks for material interaction states and
+decisions and verification/evidence tasks for acceptance-relevant rendered
+states. `tasks.md` MUST retain sufficient concrete detail or precise references
+to preserve, where applicable, user-visible states, information hierarchy,
+primary/secondary/destructive action distinctions, grouping and progressive
+disclosure, control model, material labels and semantics, state transitions,
+status/error behavior, focus/keyboard/accessibility requirements, responsive
+and non-obstruction constraints, and acceptance-relevant rendered states.
+Tasks MUST NOT collapse those decisions into capability-only wording or make a
+new UX decision. An undetermined interaction or an incomplete pattern claim
+MUST return to Plan/UX shaping before affected tasks are produced.
+
+Before implementing material user-facing UI, Implement MUST read and obey
+applicable `DESIGN.md` and either the Feature's `ux-design.md` or the exact
+established-pattern authority recorded by Plan. `tasks.md` is a decomposition
+of that authority, not a replacement for it. Conflicting or incomplete tasks
+MUST be reconciled against the design authority through the existing task
+workflow before affected implementation. Technical realization MAY vary only
+within the approved interaction design. Implement MUST NOT independently
+introduce or change the interaction model, user-visible states,
+hierarchy/grouping, primary/secondary/destructive action treatment, control
+composition, material command semantics/labels, or state transitions. A list
+such as "override / disable / re-enable / remove / delete" does not authorize
+a button-per-command management UI.
+
+If required `ux-design.md` is missing, the claimed pattern lacks exact
+authority or coverage, or correct implementation requires a new or changed UX
+decision, Implement MUST stop affected implementation and route back to
+Plan/UX shaping. It MUST NOT resolve the decision silently in code.
 
 ### Post-implementation UX/UI convergence
 
@@ -648,29 +726,41 @@ current rendered evidence in the target runtime is required for the affected
 flow or states and representative viewport or device classes as appropriate.
 For browser-based surfaces, rendered browser evidence satisfies this
 requirement. Evaluate only against applicable authority: reconciled `spec.md`,
-relevant upstream product constraints, applicable `DESIGN.md`, and applicable
-surface-specific decisions. This focused check MUST NOT become a full product
-re-audit.
+relevant upstream product constraints, applicable `DESIGN.md`, applicable
+`specs/<feature>/ux-design.md`, the exact established-pattern authority
+recorded in `plan.md` when applicable, and applicable surface-specific
+decisions. This focused check MUST NOT become a full product re-audit.
 
-Select specialist review in proportion to actual risk:
+When `specs/<feature>/ux-design.md` applies, current rendered evidence MUST
+cover its affected user-facing states. Select specialist review as follows:
 
-- When UX or interaction quality is materially at risk, invoke the installed
-  Impeccable critique capability for the affected Feature and surfaces.
+- Invoke the installed Impeccable critique capability for the affected Feature
+  and surfaces when `ux-design.md` applies or UX/interaction quality is
+  materially at risk, or the change is a substantial new or redesigned surface.
+  With an applicable `ux-design.md`, critique of the current
+  rendered implementation is mandatory regardless of risk classification.
+  Focus it on conformance to `ux-design.md` and applicable `DESIGN.md` rules,
+  and on whether the rendered interaction and visual hierarchy are acceptable.
 - When accessibility, responsiveness, theming, performance, or implementation
-  integrity is materially at risk, invoke the installed Impeccable audit
-  capability for the affected Feature and surfaces.
-- Invoke both only when the change spans both categories or is a substantial
-  new or redesigned surface.
+  integrity is materially at risk, or the change is a substantial new or
+  redesigned surface, invoke the installed Impeccable audit capability for the
+  affected Feature and surfaces. An applicable `ux-design.md` alone does not
+  require audit.
 
 If a required named capability is unavailable or cannot run, stop the affected
 convergence phase and report the missing capability; do not substitute generic
 UX reasoning or add custom availability detection. Material findings MUST be
-resolved before convergence. After a material fix, reverify the affected
-behavior. Polish is optional and finding-driven. UX/UI conditions MUST pass
-before the existing final `COMPATIBLE` classification is returned.
+resolved before convergence. For a material critique finding, correct the
+affected UI implementation or design-conformance issue, recheck the affected
+rendered state, and rerun critique before Converge can succeed. If critique
+shows that approved `ux-design.md` itself needs revision, stop Converge and
+return to Plan/UX shaping; do not redesign the interaction inside Converge.
+After other material fixes, reverify the affected behavior. Polish is optional
+and finding-driven. UX/UI conditions MUST pass before the existing final
+`COMPATIBLE` classification is returned.
 
 UX/UI governance introduces no extension, lifecycle hook, workflow, SpecKit
-command, governance aggregator, or mandatory artifact type.
+command, governance aggregator, or artifact required for every Feature.
 
 ## 16. Project-Owned and Overlay-Owned Artifacts
 
@@ -680,7 +770,8 @@ The following are project-owned and MUST survive add-on removal:
 - `architecture/baseline.md`;
 - `ROADMAP.md`;
 - `.specify/memory/constitution.md`;
-- `specs/**` and their normal Feature-local contents;
+- `specs/**` and their normal Feature-local contents, including
+  `specs/<feature>/ux-design.md` when required;
 - `DESIGN.md`, when present;
 - durable `.impeccable/surfaces/*` artifacts, when present; and
 - any project-owned ADR that was independently justified under this policy.
@@ -715,7 +806,7 @@ This overlay MUST NOT add or require:
   Feature Governance Guard hooks;
 - an `after_converge` hook other than the single Greenfield-owned ROADMAP
   lifecycle hook;
-- Preset wrappers or addenda for `tasks`, `analyze`, or `constitution`;
+- Preset wrappers or addenda for `analyze` or `constitution`;
 - Product Model, Access Model, or Product Boundaries artifacts;
 - a traceability artifact, database, or registry;
 - a product-facing PRD-review or architecture-review report;
@@ -727,7 +818,7 @@ This overlay MUST NOT add or require:
 - a native workflow overlay in place of the standalone foundation Workflow;
 - new workflow step types or parallel orchestration;
 - a new or custom overlay-owned UX/UI skill, extension, lifecycle hook,
-  workflow, SpecKit command, governance aggregator, mandatory artifact type,
+  workflow, SpecKit command, governance aggregator, unconditional UX/UI artifact,
   wrapper, registry, or installer; the Greenfield ROADMAP lifecycle extension
   is a separate, narrowly scoped exception;
 - modifications to SpecKit Core;

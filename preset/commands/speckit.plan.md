@@ -21,9 +21,15 @@ After the existing pre-plan governance and before technical planning, ask:
 Feature materially changes a user-facing surface or interaction; merely
 touching frontend code is not sufficient.
 
-1. If there is no material UI change, continue ordinary SpecKit planning.
+1. If there is no material UI change, continue ordinary SpecKit planning;
+   no `ux-design.md` is required.
 2. If an established UX/UI pattern fully determines the change, identify and
-   reuse it, then continue without shaping.
+   reuse it. In `plan.md`, name the exact pattern and its authoritative source,
+   and explain how it fully determines the affected states and interactions.
+   A generic claim such as "reuse the compact panel pattern" is insufficient
+   when the Feature introduces states, commands, destructive actions,
+   interaction hierarchy, or control composition that the cited pattern does
+   not determine. Only then continue without shaping or `ux-design.md`.
 3. Otherwise invoke: **Use the installed Impeccable shape capability, bounded
    to the current Feature and affected surfaces.** If the named capability is
    unavailable or cannot run, stop planning and report the missing capability;
@@ -34,8 +40,24 @@ touching frontend code is not sufficient.
    reconciled and revalidated. Do not copy a purely presentational decision
    into `spec.md`.
 
-Shaping may complete without an artifact. Create or update `DESIGN.md` only for
-a concrete reusable UX/UI rule. A surface artifact is optional and limited to a
-durable surface-local presentation decision with no better authority. Continue
-with ordinary SpecKit planning only after these conditions are satisfied;
-Impeccable shaping does not replace SpecKit planning, tasks, or implementation.
+For a material UI or interaction change that is not fully determined by an
+established pattern, record the concrete Feature-local interaction design in
+`specs/<feature>/ux-design.md` before technical planning continues. Define,
+where applicable: affected surfaces; user-visible states; information hierarchy;
+primary, secondary, and destructive actions; action grouping and progressive
+disclosure; control model (such as toggle, menu, or button); user-facing command
+semantics and labels where they affect understanding; transitions between states;
+error/status presentation; focus, keyboard, and accessibility expectations;
+responsive and non-obstruction constraints; and acceptance-relevant rendered
+states. Make the interaction decisions concrete enough that implementation need
+not invent them. Capability-level wording such as "override / disable /
+re-enable / remove / delete" does not satisfy this requirement for a management
+surface with new states or actions.
+
+Create or update project-level `DESIGN.md` only when shaping produces a reusable
+cross-Feature UX/UI rule. Record Feature-local interaction decisions in
+`ux-design.md`, not `DESIGN.md`. An optional surface artifact may retain durable
+surface-local presentation details, but does not replace required
+`ux-design.md`. Continue with ordinary SpecKit planning only after these
+conditions are satisfied. Impeccable shaping does not replace SpecKit planning,
+tasks, or implementation.
